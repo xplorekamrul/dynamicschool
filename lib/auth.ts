@@ -1,6 +1,6 @@
 // src/auth.ts
 import { getUserByMail } from "@/actions";
-import { Role } from "@prisma/client";
+import { Role } from "@/schema";
 import bcrypt from "bcryptjs";
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
