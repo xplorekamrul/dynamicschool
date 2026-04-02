@@ -12,10 +12,17 @@ import { headers } from "next/headers";
 const cachedLookupByDomain = unstable_cache(
    async (domain: string) => {
       try {
-         const institute = await prisma.institute.findFirst({
+         // Add 10-second timeout to database query
+         const queryPromise = prisma.institute.findFirst({
             where: { domain },
             select: { id: true },
          });
+
+         const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Database query timeout after 10 seconds')), 10000)
+         );
+
+         const institute = await Promise.race([queryPromise, timeoutPromise]) as any;
          return institute?.id ?? null;
       } catch (error) {
          console.error("Error looking up institute by domain:", error);

@@ -11,14 +11,10 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate"
-
   },
   "engines": {
     "node": ">=22.12.0",
     "pnpm": ">=8.0.0"
-  },
-  "engines": {
-    "node": ">=22.12.0"
   },
   "dependencies": {
     "@fancyapps/ui": "^6.0.22",
