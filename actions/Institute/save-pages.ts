@@ -58,7 +58,7 @@ export const savePages = superAdminActionClient
       select: { id: true, slug: true, title: true, contentType: true },
     });
 
-    const pagesBySlug = new Map(createdPages.map(p => [p.slug, p]));
+    const pagesBySlug = new Map(createdPages.map((p: typeof createdPages[0]) => [p.slug, p]));
 
     // Update parent references for pages that have a parent
     const updatePromises = pages
