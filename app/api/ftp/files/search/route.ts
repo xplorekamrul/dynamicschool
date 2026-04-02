@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { NextResponse } from "next/server";
-import { createFTPClient, getFTPBaseDir, ensureFTPBaseDir } from "@/lib/ftp";
 import { auth } from "@/lib/auth";
+import { createFTPClient, ensureFTPBaseDir, getFTPBaseDir } from "@/lib/ftp";
+import { NextResponse } from "next/server";
 
 async function listAllFiles(client: any, dir: string): Promise<any[]> {
   const allFiles: any[] = [];
@@ -30,67 +30,72 @@ async function listAllFiles(client: any, dir: string): Promise<any[]> {
 }
 
 export async function GET(req: Request) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const url = new URL(req.url);
-  const query = url.searchParams.get("q") || "";
-  const baseDir = getFTPBaseDir();
-  const client = await createFTPClient();
-
   try {
-    await ensureFTPBaseDir(client);
-    if (!query.trim()) return NextResponse.json({ files: [], query: "" });
-    const normalizedQuery = query.trim().replace(/^\/+|\/+$/g, '');
-    const searchPath = `${baseDir}/${normalizedQuery}`;
+    const session = await auth();
+    if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    let files: any[] = [];
+    const url = new URL(req.url);
+    const query = url.searchParams.get("q") || "";
+    const baseDir = getFTPBaseDir();
+    const client = await createFTPClient();
 
     try {
-      const list = await client.list(searchPath);
-      if (list.length > 0) files = await listAllFiles(client, searchPath);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (err: any) {
-      const lastSlashIndex = searchPath.lastIndexOf('/');
-      const dirPath = searchPath.substring(0, lastSlashIndex);
-      const fileName = searchPath.substring(lastSlashIndex + 1);
+      await ensureFTPBaseDir(client);
+      if (!query.trim()) return NextResponse.json({ files: [], query: "" });
+      const normalizedQuery = query.trim().replace(/^\/+|\/+$/g, '');
+      const searchPath = `${baseDir}/${normalizedQuery}`;
+
+      let files: any[] = [];
 
       try {
-        const dirList = await client.list(dirPath);
-        const matchingFile = dirList.find((item: any) =>
-          item.isFile && item.name.toLowerCase().includes(fileName.toLowerCase())
-        );
+        const list = await client.list(searchPath);
+        if (list.length > 0) files = await listAllFiles(client, searchPath);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (err: any) {
+        const lastSlashIndex = searchPath.lastIndexOf('/');
+        const dirPath = searchPath.substring(0, lastSlashIndex);
+        const fileName = searchPath.substring(lastSlashIndex + 1);
 
-        if (matchingFile) {
-          files = [{
-            name: matchingFile.name,
-            path: `${dirPath}/${matchingFile.name}`,
-            size: matchingFile.size,
-            modifiedAt: matchingFile.modifiedAt,
-          }];
-        } else {
-          const matchingFiles = dirList
-            .filter((item: any) =>
-              item.isFile && item.name.toLowerCase().includes(fileName.toLowerCase())
-            )
-            .map((file: any) => ({
-              name: file.name,
-              path: `${dirPath}/${file.name}`,
-              size: file.size,
-              modifiedAt: file.modifiedAt,
-            }));
+        try {
+          const dirList = await client.list(dirPath);
+          const matchingFile = dirList.find((item: any) =>
+            item.isFile && item.name.toLowerCase().includes(fileName.toLowerCase())
+          );
 
-          files = matchingFiles;
+          if (matchingFile) {
+            files = [{
+              name: matchingFile.name,
+              path: `${dirPath}/${matchingFile.name}`,
+              size: matchingFile.size,
+              modifiedAt: matchingFile.modifiedAt,
+            }];
+          } else {
+            const matchingFiles = dirList
+              .filter((item: any) =>
+                item.isFile && item.name.toLowerCase().includes(fileName.toLowerCase())
+              )
+              .map((file: any) => ({
+                name: file.name,
+                path: `${dirPath}/${file.name}`,
+                size: file.size,
+                modifiedAt: file.modifiedAt,
+              }));
+
+            files = matchingFiles;
+          }
+        } catch (innerErr: any) {
+          console.error(`Error searching for file:`, innerErr.message);
         }
-      } catch (innerErr: any) {
-        console.error(`Error searching for file:`, innerErr.message);
       }
-    }
 
-    return NextResponse.json({ files, query: normalizedQuery });
+      return NextResponse.json({ files, query: normalizedQuery });
+    } catch (err: any) {
+      return NextResponse.json({ error: err.message }, { status: 500 });
+    } finally {
+      client.close();
+    }
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
-  } finally {
-    client.close();
+    console.error("Auth or general error:", err);
+    return NextResponse.json({ error: err.message || "Internal server error" }, { status: 500 });
   }
 }

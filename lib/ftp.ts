@@ -22,7 +22,7 @@ export async function createFTPClient(config?: FTPConfig) {
   const ftpConfig = config || getFTPConfig();
   const client = new Client();
   client.ftp.verbose = true;
-  
+
   try {
     await client.access({
       host: ftpConfig.host,
@@ -30,6 +30,12 @@ export async function createFTPClient(config?: FTPConfig) {
       password: ftpConfig.password,
       port: ftpConfig.port || 21,
       secure: ftpConfig.secure || false,
+      // Allow self-signed certificates
+      ...(ftpConfig.secure && {
+        secureOptions: {
+          rejectUnauthorized: false,
+        },
+      }),
     });
     return client;
   } catch (err) {
@@ -53,7 +59,7 @@ export async function ensureFTPBaseDir(client: Client) {
     const exists = rootList.some(item => item.name === baseDir && item.isDirectory);
 
     if (!exists) await client.ensureDir(baseDir);
-    
+
   } catch (err) {
     console.error(`Failed to ensure base directory '${baseDir}':`, err);
     throw new Error(`Base directory '${baseDir}' could not be created or accessed`);

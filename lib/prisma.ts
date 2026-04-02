@@ -36,7 +36,7 @@ function getPrismaClient() {
 // Lazy-load Prisma client - only initialize when first accessed
 let prismaInstance: PrismaClient | undefined
 
-export function getPrisma() {
+function getPrismaInstance() {
   if (!prismaInstance) {
     prismaInstance = globalForPrisma.prisma ?? getPrismaClient()
     if (process.env.NODE_ENV !== 'production') {
@@ -46,12 +46,13 @@ export function getPrisma() {
   return prismaInstance
 }
 
-// For backward compatibility, export as getter
-export const prisma = new Proxy({} as PrismaClient, {
-  get: (target, prop) => {
-    const client = getPrisma()
-    return (client as any)[prop]
-  },
-})
+// Export the function for explicit access
+export function getPrisma() {
+  return getPrismaInstance()
+}
+
+// For backward compatibility, export as a direct reference
+// This will be initialized on first access
+export const prisma = getPrismaInstance()
 
 export default prisma
