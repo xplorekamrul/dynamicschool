@@ -1,0 +1,407 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+}
+
+enum PageStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ConfigType {
+  TEXT
+  LINK
+  NUMBER
+}
+
+enum AccountStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum ContentType {
+  SINGLE
+  DYNAMIC
+}
+
+model Institute {
+  id     String @id @default(cuid())
+  name   String
+  domain String
+
+  configs             Config[]
+  users               User[]
+  pages               Page[]
+  teachers            Teacher[]
+  ManagementCommittee ManagementCommittee[]
+  staffs              Staff[]
+  notices             Notice[]
+  vacancies           Vacancy[]
+  galleryImage        GalleryImage[]
+  galleryVideo        GalleryVideo[]
+  importantLinks      ImportantLinks[]
+  blogCategories      BlogCategory[]
+  blogPosts           BlogPost[]
+  heroSection         HeroSection[]
+  contactInfo         ContactInfo[]
+  ipLog            IpLog[]
+
+  status      AccountStatus @default(ACTIVE)
+  suspendedAt DateTime?     @map("suspended_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+model Config {
+  id String @id @default(cuid())
+
+  mobileNumber String? @map("mobile_number")
+  email        String?
+  address      String? @db.VarChar(150)
+  logo         String?
+  favicon      String?
+
+  facebook    String?
+  twitter     String?
+  instagram   String?
+  linkedin    String?
+  youtube     String?
+  established Int?
+
+  eiin        String?
+  mpo         String?
+  mapSrc      String?   @map("map_src") @db.Text
+  mapAddress  String?   @map("map_address") @db.Text
+  instituteId String    @map("institute_id")
+  institute   Institute @relation(fields: [instituteId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+enum TeacherStatus {
+  ACTIVE
+  RETIRED
+}
+
+model Teacher {
+  id String @id @default(cuid())
+
+  name        String
+  image       String?
+  designation String
+  classes     String? // Only for active teachers
+  mobile      String
+
+  status TeacherStatus @default(ACTIVE)
+
+  instituteId String    @map("institute_id")
+  institute   Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([instituteId, status])
+}
+
+model ManagementCommittee {
+  id BigInt @id @default(autoincrement())
+
+  name         String  @db.VarChar(100)
+  image        String?
+  phoneNumber  String  @map("phone_number")
+  position     String
+  shortDetails String? @map("short_details")
+
+  instituteId String    @map("institute_id")
+  institute   Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([instituteId])
+  @@map("management_committee")
+}
+
+model Staff {
+  id BigInt @id @default(autoincrement())
+
+  name        String  @db.VarChar(100)
+  image       String?
+  phoneNumber String  @map("phone_number")
+  position    String
+
+  instituteId String    @map("institute_id")
+  institute   Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([instituteId])
+  @@map("staff")
+}
+
+enum NoticeCategory {
+  GENERAL
+  EXAM
+  HOLIDAY
+  EVENT
+  URGENT
+}
+
+model Notice {
+  id BigInt @id @default(autoincrement())
+
+  title         String
+  slug          String?        @unique
+  content       String         @db.Text
+  fileUrl       String?
+  fileName      String?
+  category      NoticeCategory @default(GENERAL)
+  isPublished   Boolean        @default(true) @map("is_published")
+  specialNotice Boolean        @default(false) @map("special_notice")
+
+  instituteId String    @map("institute_id")
+  institute   Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([instituteId, isPublished])
+  @@index([instituteId, specialNotice])
+  @@index([createdAt])
+  @@map("notice")
+}
+
+model Vacancy {
+  id BigInt @id @default(autoincrement())
+
+  post        String  @db.VarChar(100)
+  salaryScale String? @map("salary_scale") @db.VarChar(100)
+  details     String? @db.Text
+  link        String? @db.VarChar(191)
+
+  instituteId String    @map("institute_id")
+  institute   Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([instituteId])
+  @@map("vacancy")
+}
+
+model User {
+  id          String  @id @default(cuid())
+  // loginToken  String?  @unique @map("login_token")
+  instituteId String? @map("institute_id")
+
+  name          String?
+  email         String    @unique
+  emailVerified DateTime? @map("email_verified")
+  password      String
+  role          Role      @default(ADMIN)
+
+  status      AccountStatus @default(ACTIVE)
+  suspendedAt DateTime?     @map("suspended_at")
+
+  institute Institute? @relation(fields: [instituteId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([instituteId])
+}
+
+model Page {
+  id          String      @id @default(cuid())
+  instituteId String      @map("institute_id")
+  title       String
+  slug        String
+  status      PageStatus  @default(ACTIVE)
+  contentType ContentType @default(SINGLE)
+  parentId    String?     @map("parent_id")
+
+  institute  Institute    @relation(fields: [instituteId], references: [id])
+  parent     Page?        @relation("PageHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children   Page[]       @relation("PageHierarchy")
+  content    Content[]
+  SeoContent SeoContent[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([instituteId, slug])
+  @@index([parentId])
+}
+
+model Content {
+  id     String @id @default(cuid())
+  pageId String @map("page_id")
+  page   Page   @relation(fields: [pageId], references: [id])
+
+  title    String
+  body     String?
+  subtitle String?
+  img_src  String?
+  img_alt  String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+model SeoContent {
+  id     String @id @default(cuid())
+  pageId String @map("page_id")
+  page   Page   @relation(fields: [pageId], references: [id])
+
+  title         String?
+  canonical_url String? @map("canonical_url")
+  keywords      String?
+  description   String?
+  ogTitle       String? @map("og_title")
+  ogImg         String? @map("og_img")
+  schema        Json?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+model GalleryImage {
+  id          BigInt    @id @default(autoincrement())
+  title       String    @db.VarChar(100)
+  ImgSrc      String    @map("img_src")
+  ImgAlt      String?   @map("img_alt")
+  index       Int       @default(0)
+  instituteId String    @map("institute_id")
+  institute   Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([instituteId])
+  @@map("gallery_images")
+}
+
+model GalleryVideo {
+  id          BigInt    @id @default(autoincrement())
+  title       String    @db.VarChar(100)
+  videoSrc    String    @map("video_src")
+  index       Int       @default(0)
+  instituteId String    @map("institute_id")
+  institute   Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([instituteId])
+  @@map("gallery_videos")
+}
+
+model ImportantLinks {
+  id          BigInt    @id @default(autoincrement())
+  name        String    @db.VarChar(255)
+  url         String    @db.VarChar(500)
+  instituteId String    @map("institute_id")
+  institute   Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([instituteId])
+  @@map("important_links")
+}
+
+// Blog Models
+model BlogCategory {
+  id          BigInt    @id @default(autoincrement())
+  name        String    @db.VarChar(30)
+  instituteId String    @map("institute_id")
+  institute   Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  blogPosts BlogPost[]
+
+  @@index([instituteId])
+  @@map("blog_categories")
+}
+
+model BlogPost {
+  id           BigInt  @id @default(autoincrement())
+  categoryId   BigInt  @map("category_id")
+  instituteId  String  @map("institute_id")
+  slug         String  @unique @map("slug") @db.VarChar(50)
+  ImgSrc       String  @map("featured_img_src") @db.VarChar(255)
+  ImgAlt       String? @map("featured_img_alt") @db.VarChar(50)
+  title        String  @db.VarChar(100)
+  content      String  @db.Text
+  displayOrder BigInt? @default(0) @map("display_order")
+  isPublished  Boolean @default(false) @map("is_published")
+
+  category  BlogCategory @relation(fields: [categoryId], references: [id])
+  institute Institute    @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+
+  @@index([instituteId])
+  @@map("blog_posts")
+}
+
+model HeroSection {
+  id          BigInt @id @default(autoincrement())
+  instituteId String @map("institute_id")
+
+  title       String  @db.VarChar(200)
+  description String? @db.Text
+  images      Json    @default("[]") // Array of {src: string, alt: string}
+  buttonUrl   String? @db.VarChar(500) @map("button_url")
+  buttonName  String? @db.VarChar(20) @map("button_Name")
+
+  displayOrder BigInt? @default(0) @map("display_order")
+  isActive     Boolean @default(true) @map("is_active")
+
+  institute Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([instituteId, isActive])
+  @@index([displayOrder])
+  @@map("hero_section")
+}
+
+model ContactInfo{
+  id             BigInt   @id @default(autoincrement())
+  instituteId    String   @map("institute_id")
+  name           String   @db.VarChar(100)
+  phoneNumber    String   @db.VarChar(20) @map("phone_number")
+  email          String?  @db.VarChar(100)
+  message        String?  @db.Text
+
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+ institute Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  @@map("contact_info")
+}
+
+model IpLog {
+  id             BigInt   @id @default(autoincrement())
+  instituteId    String   @map("institute_id")
+  ip             String?
+  section        String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+
+ institute Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  @@map("ip_log")
+}
