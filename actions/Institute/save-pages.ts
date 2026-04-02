@@ -69,8 +69,8 @@ export const savePages = superAdminActionClient
 
         if (page && parent) {
           return prisma.page.update({
-            where: { id: page.id },
-            data: { parentId: parent.id },
+            where: { id: page.id as string },
+            data: { parentId: parent.id as string },
           });
         }
         return null;
