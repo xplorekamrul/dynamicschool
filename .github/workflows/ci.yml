@@ -32,10 +32,16 @@ jobs:
       - name: Prisma Generate
         run: pnpm exec prisma generate
 
+      - name: Install Dependencies
+        run: pnpm install
+        env:
+         DATABASE_URL: "postgresql://xplorekamrul:randompassword@localhost:5432/mydb?schema=public"
+         NEXTAUTH_SECRET: "xplorekamrul-secret-for-build-purposes"
+         NEXT_PUBLIC_API_URL: "http://localhost:3000"
+
       - name: Run Build
         run: pnpm run build
         env:
-          # it need for the action robot chekcing thats why alawys give fake credentials.
-          DATABASE_URL: "postgresql://xplorekamrul:randompassword@localhost:5432/mydb?schema=public"
-          NEXTAUTH_SECRET: "xplorekamrul-secret-for-build-purposes"
-          NEXT_PUBLIC_API_URL: "http://localhost:3000"
+         DATABASE_URL: "postgresql://xplorekamrul:randompassword@localhost:5432/mydb?schema=public"
+         NEXTAUTH_SECRET: "xplorekamrul-secret-for-build-purposes"
+         NEXT_PUBLIC_API_URL: "http://localhost:3000"
