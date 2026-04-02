@@ -1,0 +1,9 @@
+[phases.setup]
+nixpkgsArchive = 'nixos-unstable'
+pkgs = ['nodejs_24', 'openssl', 'pnpm-9_x', 'pkg-config']
+
+[phases.install]
+cmds = ['pnpm install']
+
+[phases.build]
+cmds = ['pnpm run build']

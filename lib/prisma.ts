@@ -51,8 +51,12 @@ export function getPrisma() {
   return getPrismaInstance()
 }
 
-// For backward compatibility, export as a direct reference
-// This will be initialized on first access
-export const prisma = getPrismaInstance()
+// For backward compatibility, use a getter that defers initialization
+export const prisma = new Proxy({} as PrismaClient, {
+  get: (target, prop) => {
+    const client = getPrismaInstance()
+    return (client as any)[prop]
+  },
+})
 
 export default prisma

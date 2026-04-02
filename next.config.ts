@@ -1,9 +1,19 @@
 import type { NextConfig } from "next";
 
+// Validate environment variables at startup
+if (process.env.NODE_ENV === 'production') {
+  try {
+    const { validateEnvironmentVariables } = require('./lib/env-validation');
+    validateEnvironmentVariables();
+  } catch (error) {
+    console.error('⚠️  Environment validation warning:', error);
+  }
+}
+
 const nextConfig: NextConfig = {
   cacheComponents: true,
   typescript: {
-    ignoreBuildErrors: true, // Keep strict type checking
+    ignoreBuildErrors: false,
   },
   images: {
     unoptimized: false,
@@ -22,6 +32,9 @@ const nextConfig: NextConfig = {
         destination: `https://schoolstorage.arrowheadit.net/:path*`,
       },
     ]
+  },
+  experimental: {
+    preloadEntriesOnStart: true,
   },
 };
 

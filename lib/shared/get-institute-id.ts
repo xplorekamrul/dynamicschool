@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { unstable_cache } from "next/cache";
 import { headers } from "next/headers";
 
 /**
@@ -6,13 +7,31 @@ import { headers } from "next/headers";
  * Falls back to DEV_INSTITUTE_ID in development mode
  * Returns null during prerendering to avoid headers() errors
  */
+
+// Cached version of domain lookup - caches for 1 hour
+const cachedLookupByDomain = unstable_cache(
+   async (domain: string) => {
+      try {
+         const institute = await prisma.institute.findFirst({
+            where: { domain },
+            select: { id: true },
+         });
+         return institute?.id ?? null;
+      } catch (error) {
+         console.error("Error looking up institute by domain:", error);
+         return null;
+      }
+   },
+   ['institute-by-domain'],
+   { revalidate: 3600, tags: ['institute'] }
+);
+
 export async function getInstituteId(): Promise<string | null> {
    // Check if we're in development mode and have a dev institute ID
    const devInstituteId = process.env.DEV_INSTITUTE_ID;
    const isDev = process.env.NODE_ENV === "development";
 
    if (isDev && devInstituteId) {
-      // console.log("Using DEV_INSTITUTE_ID:", devInstituteId);
       return devInstituteId;
    }
 
@@ -30,7 +49,7 @@ export async function getInstituteId(): Promise<string | null> {
          return null;
       }
 
-      return await lookupInstituteIdByDomain(domain);
+      return await cachedLookupByDomain(domain);
    } catch (error) {
       // During prerendering, headers() will reject
       // This is expected and we just return null
@@ -38,20 +57,6 @@ export async function getInstituteId(): Promise<string | null> {
          return null;
       }
       console.error("Error getting institute ID:", error);
-      return null;
-   }
-}
-
-async function lookupInstituteIdByDomain(domain: string): Promise<string | null> {
-   try {
-      const institute = await prisma.institute.findFirst({
-         where: { domain },
-         select: { id: true },
-      });
-
-      return institute?.id ?? null;
-   } catch (error) {
-      console.error("Error looking up institute by domain:", error);
       return null;
    }
 }
