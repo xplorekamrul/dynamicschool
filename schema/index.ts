@@ -39,4 +39,3 @@ export type InsertInstituteFormValues = z.infer<typeof InsertInstituteFormSchema
 
 // Export contact form schema
 export { contactFormSchema, type ContactFormData } from "./contact-form";
-
