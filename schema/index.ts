@@ -1,6 +1,10 @@
-import { Role } from "@prisma/client";
 import z from "zod";
 
+// Define Role enum without importing from Prisma
+export enum Role {
+  SUPER_ADMIN = "SUPER_ADMIN",
+  ADMIN = "ADMIN",
+}
 
 // schema 
 export const loginFormSchema = z.object({
@@ -32,10 +36,11 @@ export const InsertInstituteFormSchema = z.object({
   userName: z.string().min(2, "User name is required"),
   email: z.string().email("Invalid email"),
   password: z.string().optional(),
-  role: z.nativeEnum(Role).refine((val) => val !== undefined, { message: "Role is required" }),
+  role: z.enum([Role.SUPER_ADMIN, Role.ADMIN]).refine((val) => val !== undefined, { message: "Role is required" }),
 })
 
 export type InsertInstituteFormValues = z.infer<typeof InsertInstituteFormSchema>
 
 // Export contact form schema
 export { contactFormSchema, type ContactFormData } from "./contact-form";
+
