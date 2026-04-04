@@ -2,6 +2,7 @@ import { getVacancies } from "@/actions/get-vacancies";
 import { getSeoContent } from "@/actions/public/get-organizational-history";
 import VacancyListSkeleton from "@/app/(user)/(administration)/vacancy-list/vacancy-list-skeleton";
 import VacancyListView from "@/app/(user)/(administration)/vacancy-list/vacancy-list-view";
+import { addFaviconToMetadata } from "@/lib/shared/generate-page-metadata";
 import { getInstituteId } from "@/lib/shared/get-institute-id";
 import { Suspense } from "react";
 
@@ -17,7 +18,7 @@ export async function generateMetadata() {
   const seoContent = await getCachedSeoContent(instituteId);
   if (!seoContent) return {};
 
-  return {
+  const metadata = {
     title: seoContent.title || "N/P",
     description: seoContent.description,
     keywords: seoContent.keywords,
@@ -36,6 +37,8 @@ export async function generateMetadata() {
         : undefined,
     },
   };
+
+  return await addFaviconToMetadata(metadata, instituteId);
 }
 
 async function VacancyContent() {

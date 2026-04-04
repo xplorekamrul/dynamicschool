@@ -1,4 +1,5 @@
 import { getSeoContent } from "@/actions/public/get-organizational-history";
+import { addFaviconToMetadata } from "@/lib/shared/generate-page-metadata";
 import { getInstituteId } from "@/lib/shared/get-institute-id";
 import { getPageContent } from "@/lib/shared/get-page-content";
 import { getImageUrl } from "@/lib/shared/image-utils";
@@ -19,7 +20,7 @@ export async function generateMetadata() {
   const seoContent = await getCachedSeoContent(instituteId);
   if (!seoContent) return {};
 
-  return {
+  const metadata = {
     title: seoContent.title || "Our Achievements",
     description: seoContent.description,
     keywords: seoContent.keywords,
@@ -38,6 +39,8 @@ export async function generateMetadata() {
         : undefined,
     },
   };
+
+  return await addFaviconToMetadata(metadata, instituteId);
 }
 
 export default async function OurAchievementsPage() {

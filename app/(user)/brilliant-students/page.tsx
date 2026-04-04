@@ -1,10 +1,11 @@
 import { getSeoContent } from "@/actions/public/get-organizational-history";
+import { addFaviconToMetadata } from "@/lib/shared/generate-page-metadata";
 import { getInstituteId } from "@/lib/shared/get-institute-id";
 import { getPageContent } from "@/lib/shared/get-page-content";
 import { getImageUrl } from "@/lib/shared/image-utils";
+import { LexicalContent } from "@/lib/shared/lexical-content";
 import { lexicalToHtml } from "@/lib/shared/lexical-parser";
 import Image from "next/image";
-import { LexicalContent } from "@/lib/shared/lexical-content";
 
 async function getCachedSeoContent(instituteId: string) {
   "use cache";
@@ -18,7 +19,7 @@ export async function generateMetadata() {
   const seoContent = await getCachedSeoContent(instituteId);
   if (!seoContent) return {};
 
-  return {
+  const metadata = {
     title: seoContent.title || "Brilliant Students",
     description: seoContent.description,
     keywords: seoContent.keywords,
@@ -37,6 +38,8 @@ export async function generateMetadata() {
         : undefined,
     },
   };
+
+  return await addFaviconToMetadata(metadata, instituteId);
 }
 
 export default async function BrilliantStudentsPage() {

@@ -1,10 +1,10 @@
 
 
 import { getSeoContent } from "@/actions/public/get-organizational-history";
-import { getInstituteId } from "@/lib/shared/get-institute-id";
-import Breadcrumbs from "@/components/Breadcrumbs";
 import ContactForm from "@/components/ContactForm";
 import ContactPageRightServer from "@/components/ContactPageRightServer";
+import { addFaviconToMetadata } from "@/lib/shared/generate-page-metadata";
+import { getInstituteId } from "@/lib/shared/get-institute-id";
 
 
 async function getCachedSeoContent(instituteId: string) {
@@ -19,7 +19,7 @@ export async function generateMetadata() {
   const seoContent = await getCachedSeoContent(instituteId);
   if (!seoContent) return {};
 
-  return {
+  const metadata = {
     title: seoContent.title || "N/A",
     description: seoContent.description,
     keywords: seoContent.keywords,
@@ -38,20 +38,22 @@ export async function generateMetadata() {
         : undefined,
     },
   };
+
+  return await addFaviconToMetadata(metadata, instituteId);
 }
 
 export default function page() {
-    return (
-        <>
-            {/* <Breadcrumbs pageTitle="যোগাযোগ" /> */}
-            <div className="py-10">
-                <div className="container mx-auto px-4">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <ContactPageRightServer />
-                        <ContactForm />
-                    </div>
-                </div>
-            </div>
-        </>
-    )
+  return (
+    <>
+      {/* <Breadcrumbs pageTitle="যোগাযোগ" /> */}
+      <div className="py-10">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ContactPageRightServer />
+            <ContactForm />
+          </div>
+        </div>
+      </div>
+    </>
+  )
 }

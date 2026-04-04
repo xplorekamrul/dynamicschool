@@ -1,9 +1,7 @@
-import school from "@/config/school";
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "slick-carousel/slick/slick-theme.css";
 import "slick-carousel/slick/slick.css";
-import { Toaster } from "sonner";
 import "./globals.css";
 
 const roboto = Roboto({
@@ -12,9 +10,11 @@ const roboto = Roboto({
   subsets: ["latin"],
 });
 
+// Use static metadata for root layout to avoid prerendering issues
+// Dynamic metadata is handled per-page (e.g., app/(user)/page.tsx)
 export const metadata: Metadata = {
-  title: school.name,
-  description: `${school.name} ${school.address}`,
+  title: 'My School',
+  description: 'My School - Educational Institution',
   icons: {
     icon: '/logo.png',
   },
@@ -29,7 +29,6 @@ export default function Layout({
     <html lang="en">
       <body className={`${roboto.variable} antialiased`}>
         {children}
-        {/* <Toaster position="top-right" richColors /> */}
       </body>
     </html>
   );

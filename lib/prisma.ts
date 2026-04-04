@@ -22,6 +22,8 @@ function getPrismaClient() {
 
   const adapter = new PrismaPg({
     connectionString: process.env.DATABASE_URL,
+    // Add connection pool configuration for better stability
+    schema: process.env.DATABASE_SCHEMA || 'public',
   })
 
   return new PrismaClient({
@@ -35,12 +37,23 @@ function getPrismaClient() {
 
 // Lazy-load Prisma client - only initialize when first accessed
 let prismaInstance: PrismaClient | undefined
+let connectionAttempts = 0
+const MAX_CONNECTION_ATTEMPTS = 3
 
 function getPrismaInstance() {
   if (!prismaInstance) {
-    prismaInstance = globalForPrisma.prisma ?? getPrismaClient()
-    if (process.env.NODE_ENV !== 'production') {
-      globalForPrisma.prisma = prismaInstance
+    try {
+      prismaInstance = globalForPrisma.prisma ?? getPrismaClient()
+      connectionAttempts = 0
+      console.log('✅ Prisma client initialized successfully')
+    } catch (error) {
+      connectionAttempts++
+      console.error(`❌ Failed to initialize Prisma (attempt ${connectionAttempts}/${MAX_CONNECTION_ATTEMPTS}):`, error)
+
+      if (connectionAttempts >= MAX_CONNECTION_ATTEMPTS) {
+        throw new Error(`Failed to connect to database after ${MAX_CONNECTION_ATTEMPTS} attempts. Check DATABASE_URL and network connectivity.`)
+      }
+      throw error
     }
   }
   return prismaInstance
@@ -51,8 +64,12 @@ export function getPrisma() {
   return getPrismaInstance()
 }
 
-// For backward compatibility, export as a direct reference
-// This will be initialized on first access
-export const prisma = getPrismaInstance()
+// For backward compatibility, use a getter that defers initialization
+export const prisma = new Proxy({} as PrismaClient, {
+  get: (_target, prop) => {
+    const client = getPrismaInstance()
+    return (client as any)[prop]
+  },
+})
 
 export default prisma

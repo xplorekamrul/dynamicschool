@@ -1,5 +1,6 @@
 import { getSeoContent } from "@/actions/public/get-organizational-history";
 import { prisma } from "@/lib/prisma";
+import { addFaviconToMetadata } from "@/lib/shared/generate-page-metadata";
 import { getInstituteId } from "@/lib/shared/get-institute-id";
 import Image from "next/image";
 import { Suspense } from "react";
@@ -24,7 +25,7 @@ export async function generateMetadata() {
   const seoContent = await getCachedSeoContent(instituteId);
   if (!seoContent) return {};
 
-  return {
+  const metadata = {
     title: seoContent.title || "N/P",
     description: seoContent.description,
     keywords: seoContent.keywords,
@@ -43,6 +44,8 @@ export async function generateMetadata() {
         : undefined,
     },
   };
+
+  return await addFaviconToMetadata(metadata, instituteId);
 }
 
 async function getStaff(): Promise<StaffMember[]> {

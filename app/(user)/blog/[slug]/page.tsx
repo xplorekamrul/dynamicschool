@@ -1,5 +1,6 @@
 import { LexicalRenderer } from "@/components/shared/lexical-renderer";
 import { prisma } from "@/lib/prisma";
+import { addFaviconToMetadata } from "@/lib/shared/generate-page-metadata";
 import { getInstituteId } from "@/lib/shared/get-institute-id";
 import { getImageUrl } from "@/lib/shared/image-utils";
 import Image from "next/image";
@@ -31,7 +32,7 @@ export async function generateMetadata({ params }: BlogDetailPageProps) {
 
    if (!post) return {};
 
-   return {
+   const metadata = {
       title: post.title,
       description: post.content?.substring(0, 160) || post.title,
       openGraph: {
@@ -46,6 +47,8 @@ export async function generateMetadata({ params }: BlogDetailPageProps) {
          ],
       },
    };
+
+   return await addFaviconToMetadata(metadata, instituteId);
 }
 
 export default async function BlogDetailPage({ params }: BlogDetailPageProps) {

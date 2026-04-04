@@ -1,5 +1,5 @@
 import { getHeroSection } from "@/actions/home/get-hero-section";
-import { getSeoContent } from "@/actions/home/get-seo-content";
+import { getSeoContentWithFavicon } from "@/actions/home/get-seo-content";
 import HeroSlider from "@/components/HeroSlider";
 import HomeContentWrap from "@/components/HomeContentWrap-dynamic";
 import NotisArea from "@/components/NotisArea";
@@ -11,7 +11,7 @@ export async function generateMetadata() {
   const instituteId = await getInstituteId();
   if (!instituteId) return {};
 
-  const seoContent = await getSeoContent(instituteId, "/");
+  const { seoContent, favicon } = await getSeoContentWithFavicon(instituteId, "/");
   if (!seoContent) return {};
 
   return {
@@ -19,6 +19,9 @@ export async function generateMetadata() {
     description: seoContent.description,
     keywords: seoContent.keywords,
     canonical: seoContent.canonical_url,
+    icons: {
+      icon: favicon || "/logo.png",
+    },
     openGraph: {
       title: seoContent.ogTitle || seoContent.title,
       description: seoContent.description,
