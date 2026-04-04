@@ -19,13 +19,12 @@ function normalizeDomain(domain: string): string {
 
 // Cached version of domain lookup - caches for 1 hour
 // IMPORTANT: Domain is passed as argument so each domain gets its own cache entry
+// The function arguments automatically become part of the cache key
 const cachedLookupByDomain = unstable_cache(
-   async (domain: string) => {
+   async (normalizedDomain: string) => {
       try {
-         const normalizedDomain = normalizeDomain(domain);
-
          if (!normalizedDomain) {
-            console.warn("Empty domain after normalization");
+            console.warn("Empty domain provided to cache lookup");
             return null;
          }
 
@@ -51,7 +50,7 @@ const cachedLookupByDomain = unstable_cache(
          console.log(`✅ Institute found for domain ${normalizedDomain}: ${institute.id}`);
          return institute.id;
       } catch (error) {
-         console.error(`Error looking up institute by domain "${domain}":`, error);
+         console.error(`Error looking up institute by domain "${normalizedDomain}":`, error);
          return null;
       }
    },
@@ -95,7 +94,8 @@ export async function getInstituteId(): Promise<string | null> {
 
       console.log("Normalized domain:", domain);
 
-      // Pass domain as argument so it becomes part of the cache key
+      // Pass normalized domain as argument so it becomes part of the cache key
+      // Each domain gets its own cache entry: ['institute-by-domain', 'example.com']
       const instituteId = await cachedLookupByDomain(domain);
 
       if (!instituteId) {
