@@ -11,6 +11,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   cacheComponents: true,
   typescript: {
     ignoreBuildErrors: false,
