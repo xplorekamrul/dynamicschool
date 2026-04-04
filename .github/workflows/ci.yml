@@ -17,7 +17,7 @@ jobs:
       # pnpm on github action 
       - name: Install pnpm
         uses: pnpm/action-setup@v3
-        with:
+        with: 
           version: 10 # also can use the same version that have on your pc
 
       - name: Setup Node.js
@@ -33,7 +33,7 @@ jobs:
         run: pnpm exec prisma generate
 
       - name: Install Dependencies
-        run: pnpm install
+        run: pnpm install 
         env:
          DATABASE_URL: "postgresql://xplorekamrul:randompassword@localhost:5432/mydb?schema=public"
          NEXTAUTH_SECRET: "xplorekamrul-secret-for-build-purposes"
