@@ -14,34 +14,27 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # pnpm on github action 
       - name: Install pnpm
         uses: pnpm/action-setup@v3
         with: 
-          version: 10 # also can use the same version that have on your pc
+          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'pnpm' # if use pnpm cache then project build more faster
+          cache: 'pnpm'
 
       - name: Install Dependencies
+        # We provide the DATABASE_URL here because pnpm install 
+        # automatically runs 'prisma generate' via postinstall
         run: pnpm install
-
-      - name: Prisma Generate
-        run: pnpm exec prisma generate
-
-      - name: Install Dependencies
-        run: pnpm install 
         env:
-         DATABASE_URL: "postgresql://xplorekamrul:randompassword@localhost:5432/mydb?schema=public"
-         NEXTAUTH_SECRET: "xplorekamrul-secret-for-build-purposes"
-         NEXT_PUBLIC_API_URL: "http://localhost:3000"
+          DATABASE_URL: "postgresql://xplorekamrul:randompassword@localhost:5432/mydb?schema=public"
 
       - name: Run Build
         run: pnpm run build
         env:
-         DATABASE_URL: "postgresql://xplorekamrul:randompassword@localhost:5432/mydb?schema=public"
-         NEXTAUTH_SECRET: "xplorekamrul-secret-for-build-purposes"
-         NEXT_PUBLIC_API_URL: "http://localhost:3000"
+          DATABASE_URL: "postgresql://xplorekamrul:randompassword@localhost:5432/mydb?schema=public"
+          NEXTAUTH_SECRET: "xplorekamrul-secret-for-build-purposes"
+          NEXT_PUBLIC_API_URL: "http://localhost:3000"
